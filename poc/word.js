@@ -8,18 +8,18 @@ let wordList = [
     "apple"
 ];
 
-function createGrid() {
-    for (var i = 0; i < 15; i++) {
+function createGrid(gridSize) {
+    for (var i = 0; i < gridSize; i++) {
         grid.push([]);
-        for (var j = 0; j < 15; j++) {
+        for (var j = 0; j < gridSize; j++) {
             grid[i].push(".");
         }
     }
 }
 
-function printGrid() {
-    for (var i = 0; i < 15; i++) {
-        for (var j = 0; j < 15; j++) {
+function printGrid(gridSize) {
+    for (var i = 0; i < gridSize; i++) {
+        for (var j = 0; j < gridSize; j++) {
             let printText = " " + grid[i][j] + " ";
             process.stdout.write(printText);
         }
@@ -35,11 +35,11 @@ function sortWords() {
 
 
 function checkIntersection() {
-    
+
 }
 
 sortWords();
-createGrid();
+createGrid(20);
 
 let firstWord = wordList[0];
 let nextWord = wordList[1];
@@ -49,7 +49,7 @@ for (var i = 0; i < firstWord.length; i++) {
 }
 
 
-printGrid();
+printGrid(20);
 console.log(nextWord);
 
 
