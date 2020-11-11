@@ -2,25 +2,40 @@
 // const closeBtn = document.getElementById('close-btn');
 
 
+
+const threeLetterWords = ["AGE", "AIR", "AND", "APP", "BAG", "BOY"];
+const fourLetterWords = ["GIRL", "BABY", "STAR", "ARMY", "COOL", "CODE"];
+const fiveLetterWords = ["BOARD", "APPLE", "TIGER", "WORLD", "BLACK"];
+
+
 class WordGameController {
 
     constructor(gridSize) {
         this.grid = [];
-        this.wordList = [
-            "race",
-            "age",
-            "baby",
-            "hate",
-            "retailer",
-            "apple"
-        ];
+        this.wordList = [];
+        // this.wordList = [
+        //     "EGG",
+        //     "RACE",
+        //     "AGE",
+        //     "BABY",
+        //     "HATE",
+        //     "RETAILER",
+        //     "APPLE"
+        // ];
         this.gridSize = 0;
         this.boardWordList = [];
         this.leftWordList = [];
         this.initializeGame();
     }
 
+
+    getRandomInt(max) {
+        return Math.floor(Math.random() * Math.floor(max));
+    }
+
+
     initializeGame() {
+        this.generateRandomWords();
         // Sort all the words by length, descending.
         this.sortWords();
         // Choose a grid size with safety factor of 6.
@@ -38,14 +53,21 @@ class WordGameController {
         let currentTargetWordIndex = 0;
         let currentTargetWord = this.leftWordList[currentTargetWordIndex];
         let isPlaced = this.leftToRightInsert(currentTargetWord, this.gridSize / 2 - currentTargetWord.length, this.gridSize / 2, 0);
-
+        let loopCount = 0;
         // Continue placing until all words are inserted.
         while(this.leftWordList.length !== 0) {
+            loopCount += 1;
+            if (loopCount > 1000) {
+                return this.initializeGame();
+            }
             // this.printGrid();
             currentTargetWord = this.leftWordList[currentTargetWordIndex];
             isPlaced = false;
             for (var i = 0; i < this.boardWordList.length; i++) {
                 let currentBoardWord = this.boardWordList[i];
+                if (currentBoardWord.word === currentTargetWord) {
+                    continue;
+                }
                 let intersectionList = this.getUniqueIntersectionList(currentBoardWord.word, currentTargetWord);
                 for (var j = 0; j < intersectionList.length; j++) {
                     let currentIntersectionChar = intersectionList[j];
@@ -85,6 +107,7 @@ class WordGameController {
                 }
             }
         }
+        return true;
     }
 
     getIntersectionOccurenceIndexes(currentBoardWord, currentIntersectionChar) {
@@ -133,6 +156,43 @@ class WordGameController {
             if (this.grid[y][x+i] !== "." && i !== intersectionIndex) {
                 return false;
             }
+            let topNeighbour = this.grid[y-1][x+i];
+            let bottomNeighbour = this.grid[y+1][x+i];
+            let leftNeighbour = this.grid[y][x+i-1];
+            let rightNeighbour = this.grid[y][x+i+1];
+            if (i === intersectionIndex) {
+                if (
+                    /[A-Z]/.test(leftNeighbour)
+                    || /[A-Z]/.test(rightNeighbour)
+                ) {
+                    return false;
+                }
+            }
+            else if (i === intersectionIndex + 1) {
+                if (
+                   /[A-Z]/.test(topNeighbour)
+                || /[A-Z]/.test(rightNeighbour)
+                || /[A-Z]/.test(bottomNeighbour)) {
+                    return false;
+                }
+            }
+            else if (i === intersectionIndex - 1) {
+                if (
+                   /[A-Z]/.test(topNeighbour)
+                || /[A-Z]/.test(leftNeighbour)
+                || /[A-Z]/.test(bottomNeighbour)) {
+                    return false;
+                }
+            }
+            else {
+                if (
+                   /[A-Z]/.test(topNeighbour)
+                || /[A-Z]/.test(leftNeighbour)
+                || /[A-Z]/.test(rightNeighbour)
+                || /[A-Z]/.test(bottomNeighbour)) {
+                    return false;
+                }
+            }
         }
         return true;
     }
@@ -161,6 +221,43 @@ class WordGameController {
             if (this.grid[y+i][x] !== "." && i !== intersectionIndex) {
                 return false;
             }
+            let topNeighbour = this.grid[y-1][x+i];
+            let bottomNeighbour = this.grid[y+1][x+i];
+            let leftNeighbour = this.grid[y][x+i-1];
+            let rightNeighbour = this.grid[y][x+i+1];
+            if (i === intersectionIndex) {
+                if (
+                    /[A-Z]/.test(topNeighbour)
+                    || /[A-Z]/.test(bottomNeighbour)
+                ) {
+                    return false;
+                }
+            }
+            else if (i === intersectionIndex + 1) {
+                if (
+                   /[A-Z]/.test(leftNeighbour)
+                || /[A-Z]/.test(rightNeighbour)
+                || /[A-Z]/.test(bottomNeighbour)) {
+                    return false;
+                }
+            }
+            else if (i === intersectionIndex - 1) {
+                if (
+                   /[A-Z]/.test(leftNeighbour)
+                || /[A-Z]/.test(rightNeighbour)
+                || /[A-Z]/.test(topNeighbour)) {
+                    return false;
+                }
+            }
+            else {
+                if (
+                   /[A-Z]/.test(topNeighbour)
+                || /[A-Z]/.test(leftNeighbour)
+                || /[A-Z]/.test(rightNeighbour)
+                || /[A-Z]/.test(bottomNeighbour)) {
+                    return false;
+                }
+            }
         }
         return true;
     }
@@ -170,6 +267,31 @@ class WordGameController {
         let word2CharArray = word2.split('');
         return [...new Set(word1CharArray.filter(x => word2CharArray.indexOf(x) !== -1))];
     }
+
+
+    generateRandomWords() {
+        let words = [];
+        let randomInt = this.getRandomInt(threeLetterWords.length);
+        words.push(threeLetterWords[randomInt]);
+        while (words.indexOf(threeLetterWords[randomInt]) !== -1) {
+            randomInt = this.getRandomInt(threeLetterWords.length);
+        }
+        words.push(threeLetterWords[randomInt]);
+        randomInt = this.getRandomInt(fourLetterWords.length);
+        words.push(fourLetterWords[randomInt]);
+        while (words.indexOf(fourLetterWords[randomInt]) !== -1) {
+            randomInt = this.getRandomInt(fourLetterWords.length);
+        }
+        words.push(fourLetterWords[randomInt]);
+        randomInt = this.getRandomInt(fiveLetterWords.length);
+        words.push(fiveLetterWords[randomInt]);
+        while (words.indexOf(fiveLetterWords[randomInt]) !== -1) {
+            randomInt = this.getRandomInt(fiveLetterWords.length);
+        }
+        words.push(fiveLetterWords[randomInt]);
+        this.wordList = words;
+    }
+
 
 
 }
