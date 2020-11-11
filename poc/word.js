@@ -1,3 +1,6 @@
+const rulesBtn = document.getElementById('rules-btn');
+const closeBtn = document.getElementById('close-btn');
+
 let grid = [];
 let wordList = [
     "act",
@@ -21,9 +24,9 @@ function printGrid(gridSize) {
     for (var i = 0; i < gridSize; i++) {
         for (var j = 0; j < gridSize; j++) {
             let printText = " " + grid[i][j] + " ";
-            process.stdout.write(printText);
+            // process.stdout.write(printText);
         }
-        console.log("\n");
+        console.log();
     }
 }
 
@@ -77,8 +80,6 @@ console.log(nextWord);
 
 
 
-
-
-
-
-//
+// Rules and close event handlers
+rulesBtn.addEventListener('click', () => rules.classList.add('show'));
+closeBtn.addEventListener('click', () => rules.classList.remove('show'));
