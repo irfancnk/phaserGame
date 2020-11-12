@@ -1,3 +1,4 @@
+
 try {
     const rulesBtn = document.getElementById('rules-btn');
     const closeBtn = document.getElementById('close-btn');
@@ -325,4 +326,10 @@ class WordGameController {
 }
 
 var wordGameController = new WordGameController();
+var phaserController = new PhaserController();
 wordGameController.printGrid();
+
+
+
+
+//
