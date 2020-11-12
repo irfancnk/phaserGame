@@ -1,5 +1,12 @@
-// const rulesBtn = document.getElementById('rules-btn');
-// const closeBtn = document.getElementById('close-btn');
+try {
+    const rulesBtn = document.getElementById('rules-btn');
+    const closeBtn = document.getElementById('close-btn');
+    // Rules and close event handlers
+    rulesBtn.addEventListener('click', () => rules.classList.add('show'));
+    closeBtn.addEventListener('click', () => rules.classList.remove('show'));
+} catch (e) {
+    // NOT NODE ENV
+}
 
 
 const threeLetterWords = ["AGE", "AIR", "AND", "APP", "BAG", "BOY"];
@@ -9,18 +16,9 @@ const fiveLetterWords = ["BOARD", "APPLE", "TIGER", "WORLD", "BLACK"];
 
 class WordGameController {
 
-    constructor(gridSize) {
+    constructor() {
         this.grid = [];
         this.wordList = [];
-        // this.wordList = [
-        //     "EGG",
-        //     "RACE",
-        //     "AGE",
-        //     "BABY",
-        //     "HATE",
-        //     "RETAILER",
-        //     "APPLE"
-        // ];
         this.gridSize = 0;
         this.boardWordList = [];
         this.leftWordList = [];
@@ -70,8 +68,42 @@ class WordGameController {
                 currentTargetWordIndex += 0;
             }
         }
+        this.cropGrid();
         return true;
     }
+
+    cropGrid() {
+        let croppedGrid = [];
+        let topY = this.gridSize, botY = 0;
+        let leftX = this.gridSize, rightX = 0;
+        for (var i = 0; i < this.gridSize; i++) {
+            for (var j = 0; j < this.gridSize; j++) {
+                if (this.grid[i][j] !== ".") {
+                    if (j < leftX) {
+                        leftX = j;
+                    }
+                    if (j > rightX) {
+                        rightX = j;
+                    }
+                    if (i < topY) {
+                        topY = i;
+                    }
+                    if (i > botY) {
+                        botY = i;
+                    }
+                }
+            }
+        }
+        for (var i = topY; i <= botY; i++) {
+            var newArray = [];
+            for (var j = leftX; j <= rightX; j++) {
+                newArray.push(this.grid[i][j]);
+            }
+            croppedGrid.push(newArray);
+        }
+        this.grid = croppedGrid;
+    }
+
 
     tryConcat(currentTargetWord, currentBoardWord) {
         let intersectionList = this.getUniqueIntersectionList(currentBoardWord.word, currentTargetWord);
@@ -238,15 +270,17 @@ class WordGameController {
 
 
     printGrid() {
-        console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        for (var i = 0; i < this.gridSize; i++) {
-            for (var j = 0; j < this.gridSize; j++) {
+        for (var i = 0; i < this.grid.length; i++) {
+            for (var j = 0; j < this.grid[i].length; j++) {
                 let printText = " " + this.grid[i][j] + " ";
-                process.stdout.write(printText);
+                try {
+                    process.stdout.write(printText);
+                } catch (e) {
+                    // NOT NODE ENV
+                }
             }
             console.log();
         }
-        console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     }
 
     sortWords() {
@@ -290,12 +324,5 @@ class WordGameController {
 
 }
 
-var wordGameController = new WordGameController(20);
+var wordGameController = new WordGameController();
 wordGameController.printGrid();
-
-
-
-
-// Rules and close event handlers
-// rulesBtn.addEventListener('click', () => rules.classList.add('show'));
-// closeBtn.addEventListener('click', () => rules.classList.remove('show'));
