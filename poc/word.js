@@ -2,7 +2,6 @@
 // const closeBtn = document.getElementById('close-btn');
 
 
-
 const threeLetterWords = ["AGE", "AIR", "AND", "APP", "BAG", "BOY"];
 const fourLetterWords = ["GIRL", "BABY", "STAR", "ARMY", "COOL", "CODE"];
 const fiveLetterWords = ["BOARD", "APPLE", "TIGER", "WORLD", "BLACK"];
@@ -29,86 +28,169 @@ class WordGameController {
     }
 
 
-    getRandomInt(max) {
-        return Math.floor(Math.random() * Math.floor(max));
-    }
-
-
-    initializeGame() {
-        this.generateRandomWords();
-        // Sort all the words by length, descending.
-        this.sortWords();
-        // Choose a grid size with safety factor of 6.
-        this.gridSize = this.wordList[0].length * 4;
-        // Clone chosen words to not placed array.
-        this.leftWordList = [...this.wordList];
-        // Create empty grid on desired size.
+    createEmptyGrid() {
         for (var i = 0; i < this.gridSize; i++) {
             this.grid.push([]);
             for (var j = 0; j < this.gridSize; j++) {
                 this.grid[i].push(".");
             }
         }
+    }
+
+    initializeGame() {
+        this.generateRandomWords();
+        // Sort all the words by length, descending.
+        this.sortWords();
+        // Clone chosen words to not placed array.
+        this.leftWordList = [...this.wordList];
+        // Choose a grid size with safety factor of 6.
+        this.gridSize = this.wordList[0].length * 6;
+        // Create empty grid on desired size.
+        this.createEmptyGrid();
         // Take the first word and place it on the board.
         let currentTargetWordIndex = 0;
         let currentTargetWord = this.leftWordList[currentTargetWordIndex];
         let isPlaced = this.leftToRightInsert(currentTargetWord, this.gridSize / 2 - currentTargetWord.length, this.gridSize / 2, 0);
         let loopCount = 0;
+        let concatResult = false;
         // Continue placing until all words are inserted.
-        while(this.leftWordList.length !== 0) {
-            loopCount += 1;
-            if (loopCount > 1000) {
-                return this.initializeGame();
-            }
-            // this.printGrid();
-            currentTargetWord = this.leftWordList[currentTargetWordIndex];
+        while(this.leftWordList.length !== 0 && currentTargetWordIndex < this.leftWordList.length ) {
             isPlaced = false;
+            currentTargetWord = this.leftWordList[currentTargetWordIndex];
             for (var i = 0; i < this.boardWordList.length; i++) {
                 let currentBoardWord = this.boardWordList[i];
-                if (currentBoardWord.word === currentTargetWord) {
-                    continue;
-                }
-                let intersectionList = this.getUniqueIntersectionList(currentBoardWord.word, currentTargetWord);
-                for (var j = 0; j < intersectionList.length; j++) {
-                    let currentIntersectionChar = intersectionList[j];
-                    let charOccurenceIndexesInBoardWord = this.getIntersectionOccurenceIndexes(currentBoardWord.word, currentIntersectionChar);
-                    let charOccurenceIndexesInTargetWord = this.getIntersectionOccurenceIndexes(currentTargetWord, currentIntersectionChar);
-                    for (var k = 0; k < charOccurenceIndexesInBoardWord.length; k++) {
-                        let currentBoardWordOccurenceIndex = charOccurenceIndexesInBoardWord[k];
-                        for (var t = 0; t < charOccurenceIndexesInTargetWord.length; t++) {
-                            let currentTargetWordOccurenceIndex = charOccurenceIndexesInTargetWord[t];
-                            if (currentBoardWord.axis === "H") {
-                                let targetX = currentBoardWord.x + currentBoardWordOccurenceIndex;
-                                let targetY = currentBoardWord.y - currentTargetWordOccurenceIndex;
-                                if (this.canTopDownInsertWithoutInterfering(currentTargetWord, targetX, targetY, currentTargetWordOccurenceIndex)) {
-                                    isPlaced = this.topDownInsert(currentTargetWord, targetX, targetY, currentTargetWordOccurenceIndex);
-                                }
-                            } else if (currentBoardWord.axis === "V") {
-                                let targetX = currentBoardWord.x - currentTargetWordOccurenceIndex;
-                                let targetY = currentBoardWord.y + currentBoardWordOccurenceIndex;
-                                if (this.canLeftToRightInsertWithoutInterfering(currentTargetWord, targetX, targetY, currentTargetWordOccurenceIndex)) {
-                                    isPlaced = this.leftToRightInsert(currentTargetWord, targetX, targetY, currentTargetWordOccurenceIndex);
-                                }
-                            }
-                            if (isPlaced) {
-                                break;
-                            }
-                        }
-                        if (isPlaced) {
-                            break;
-                        }
-                    }
-                    if (isPlaced) {
-                        break;
-                    }
-                }
-                if (isPlaced) {
+                concatResult = this.tryConcat(currentTargetWord, currentBoardWord);
+                if (concatResult) {
                     break;
+                }
+            }
+            if (!concatResult) {
+                currentTargetWordIndex += 1;
+            } else {
+                currentTargetWordIndex += 0;
+            }
+        }
+        return true;
+    }
+
+    tryConcat(currentTargetWord, currentBoardWord) {
+        let intersectionList = this.getUniqueIntersectionList(currentBoardWord.word, currentTargetWord);
+        if (intersectionList.length > 0) {
+            for (var i = 0; i < intersectionList.length; i++) {
+                let currentIntersectionChar = intersectionList[i];
+                let charOccurenceIndexesInBoardWord = this.getIntersectionOccurenceIndexes(currentBoardWord.word, currentIntersectionChar);
+                let charOccurenceIndexesInTargetWord = this.getIntersectionOccurenceIndexes(currentTargetWord, currentIntersectionChar);
+                let isSuitable = this.isCharSuitable(
+                    currentIntersectionChar,
+                    charOccurenceIndexesInBoardWord,
+                    charOccurenceIndexesInTargetWord,
+                    currentTargetWord,
+                    currentBoardWord
+                );
+                if (isSuitable) {
+                    return true;
+                }
+            }
+        }
+        return false;
+
+    }
+
+    isCharSuitable(currentIntersectionChar, charOccurenceIndexesInBoardWord, charOccurenceIndexesInTargetWord, currentTargetWord, currentBoardWord) {
+        let targetX;
+        let targetY;
+        for (var i = 0; i < charOccurenceIndexesInBoardWord.length; i++) {
+            let currentBoardWordOccurenceIndex = charOccurenceIndexesInBoardWord[i];
+            for (var j = 0; j < charOccurenceIndexesInTargetWord.length; j++) {
+                let currentTargetWordOccurenceIndex = charOccurenceIndexesInTargetWord[j];
+                if (currentBoardWord.axis === "H") {
+                    targetX = currentBoardWord.x + currentBoardWordOccurenceIndex;
+                    targetY = currentBoardWord.y - currentTargetWordOccurenceIndex;
+                    if (this.canTopDownInsert(currentTargetWord, targetX, targetY, currentTargetWordOccurenceIndex)) {
+                        let isPlaced = this.topDownInsert(currentTargetWord, targetX, targetY, currentTargetWordOccurenceIndex);
+                        return true;
+                    }
+                } else if (currentBoardWord.axis === "V") {
+                    targetX = currentBoardWord.x - currentTargetWordOccurenceIndex;
+                    targetY = currentBoardWord.y + currentBoardWordOccurenceIndex;
+                    if (this.canLeftToRightInsert(currentTargetWord, targetX, targetY, currentTargetWordOccurenceIndex)) {
+                        let isPlaced = this.leftToRightInsert(currentTargetWord, targetX, targetY, currentTargetWordOccurenceIndex);
+                        return true;
+                    }
+                }
+
+            }
+        }
+        return false;
+    }
+
+
+    canTopDownInsert(word, x, y, intersectionIndex) {
+        const regex = RegExp(/[A-Z]/);
+        for (var i = 0; i < word.length; i++) {
+            let currentGridPoint = this.grid[y+i][x];
+            let topNeighbour     = this.grid[y+i-1][x];
+            let bottomNeighbour  = this.grid[y+i+1][x];
+            let leftNeighbour    = this.grid[y+i][x-1];
+            let rightNeighbour   = this.grid[y+i][x+1];
+            if (i === intersectionIndex) {
+                if (regex.test(topNeighbour) || regex.test(bottomNeighbour)) {
+                    return false;
+                }
+            } else if (i === intersectionIndex + 1) {
+                if (regex.test(leftNeighbour) || regex.test(rightNeighbour) || regex.test(bottomNeighbour)) {
+                    return false;
+                }
+            } else if (i === intersectionIndex - 1) {
+                if (regex.test(leftNeighbour) || regex.test(rightNeighbour) || regex.test(topNeighbour)) {
+                    return false;
+                }
+            } else {
+                if (regex.test(leftNeighbour) || regex.test(rightNeighbour) || regex.test(topNeighbour) || regex.test(bottomNeighbour)) {
+                    return false;
                 }
             }
         }
         return true;
     }
+
+
+    canLeftToRightInsert(word, x, y, intersectionIndex) {
+        const regex = RegExp(/[A-Z]/);
+        for (var i = 0; i < word.length; i++) {
+            let currentGridPoint = this.grid[y][x+i];
+            let topNeighbour     = this.grid[y-1][x+i];
+            let bottomNeighbour  = this.grid[y+1][x+i];
+            let leftNeighbour    = this.grid[y][x+i-1];
+            let rightNeighbour   = this.grid[y][x+i+1];
+            if (i === intersectionIndex) {
+                if (regex.test(leftNeighbour) || regex.test(rightNeighbour)) {
+                    return false;
+                }
+            } else if (i === intersectionIndex + 1) {
+                if (regex.test(topNeighbour) || regex.test(bottomNeighbour) || regex.test(rightNeighbour)) {
+                    return false;
+                }
+            } else if (i === intersectionIndex - 1) {
+                if (regex.test(topNeighbour) || regex.test(bottomNeighbour) || regex.test(leftNeighbour)) {
+                    return false;
+                }
+            } else {
+                if (regex.test(leftNeighbour) || regex.test(rightNeighbour) || regex.test(topNeighbour) || regex.test(bottomNeighbour)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
+
+
+    getRandomInt(max) {
+        return Math.floor(Math.random() * Math.floor(max));
+    }
+
 
     getIntersectionOccurenceIndexes(currentBoardWord, currentIntersectionChar) {
         var indices = [];
@@ -118,21 +200,6 @@ class WordGameController {
         return indices;
     }
 
-    printGrid() {
-        for (var i = 0; i < this.gridSize; i++) {
-            for (var j = 0; j < this.gridSize; j++) {
-                let printText = " " + this.grid[i][j] + " ";
-                process.stdout.write(printText);
-            }
-            console.log();
-        }
-    }
-
-    sortWords() {
-        this.wordList.sort( function(a, b) {
-            return b.length - a.length;
-        });
-    }
 
     leftToRightInsert(word, x, y, intersectionIndex) {
         for (var i = 0; i < word.length; i++) {
@@ -150,53 +217,6 @@ class WordGameController {
         }
         return true;
     }
-
-    canLeftToRightInsertWithoutInterfering(word, x, y, intersectionIndex) {
-        for (var i = 0; i < word.length; i++) {
-            if (this.grid[y][x+i] !== "." && i !== intersectionIndex) {
-                return false;
-            }
-            let topNeighbour = this.grid[y-1][x+i];
-            let bottomNeighbour = this.grid[y+1][x+i];
-            let leftNeighbour = this.grid[y][x+i-1];
-            let rightNeighbour = this.grid[y][x+i+1];
-            if (i === intersectionIndex) {
-                if (
-                    /[A-Z]/.test(leftNeighbour)
-                    || /[A-Z]/.test(rightNeighbour)
-                ) {
-                    return false;
-                }
-            }
-            else if (i === intersectionIndex + 1) {
-                if (
-                   /[A-Z]/.test(topNeighbour)
-                || /[A-Z]/.test(rightNeighbour)
-                || /[A-Z]/.test(bottomNeighbour)) {
-                    return false;
-                }
-            }
-            else if (i === intersectionIndex - 1) {
-                if (
-                   /[A-Z]/.test(topNeighbour)
-                || /[A-Z]/.test(leftNeighbour)
-                || /[A-Z]/.test(bottomNeighbour)) {
-                    return false;
-                }
-            }
-            else {
-                if (
-                   /[A-Z]/.test(topNeighbour)
-                || /[A-Z]/.test(leftNeighbour)
-                || /[A-Z]/.test(rightNeighbour)
-                || /[A-Z]/.test(bottomNeighbour)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
 
 
     topDownInsert(word, x, y, intersectionIndex) {
@@ -216,51 +236,25 @@ class WordGameController {
         return true;
     }
 
-    canTopDownInsertWithoutInterfering(word, x, y, intersectionIndex) {
-        for (var i = 0; i < word.length; i++) {
-            if (this.grid[y+i][x] !== "." && i !== intersectionIndex) {
-                return false;
+
+    printGrid() {
+        console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        for (var i = 0; i < this.gridSize; i++) {
+            for (var j = 0; j < this.gridSize; j++) {
+                let printText = " " + this.grid[i][j] + " ";
+                process.stdout.write(printText);
             }
-            let topNeighbour = this.grid[y-1][x+i];
-            let bottomNeighbour = this.grid[y+1][x+i];
-            let leftNeighbour = this.grid[y][x+i-1];
-            let rightNeighbour = this.grid[y][x+i+1];
-            if (i === intersectionIndex) {
-                if (
-                    /[A-Z]/.test(topNeighbour)
-                    || /[A-Z]/.test(bottomNeighbour)
-                ) {
-                    return false;
-                }
-            }
-            else if (i === intersectionIndex + 1) {
-                if (
-                   /[A-Z]/.test(leftNeighbour)
-                || /[A-Z]/.test(rightNeighbour)
-                || /[A-Z]/.test(bottomNeighbour)) {
-                    return false;
-                }
-            }
-            else if (i === intersectionIndex - 1) {
-                if (
-                   /[A-Z]/.test(leftNeighbour)
-                || /[A-Z]/.test(rightNeighbour)
-                || /[A-Z]/.test(topNeighbour)) {
-                    return false;
-                }
-            }
-            else {
-                if (
-                   /[A-Z]/.test(topNeighbour)
-                || /[A-Z]/.test(leftNeighbour)
-                || /[A-Z]/.test(rightNeighbour)
-                || /[A-Z]/.test(bottomNeighbour)) {
-                    return false;
-                }
-            }
+            console.log();
         }
-        return true;
+        console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     }
+
+    sortWords() {
+        this.wordList.sort( function(a, b) {
+            return b.length - a.length;
+        });
+    }
+
 
     getUniqueIntersectionList(word1, word2) {
         let word1CharArray = word1.split('');
