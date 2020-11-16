@@ -306,6 +306,10 @@ class WordGameController {
             randomInt = this.getRandomInt(threeLetterWords.length);
         }
         words.push(threeLetterWords[randomInt]);
+        while (words.indexOf(threeLetterWords[randomInt]) !== -1) {
+            randomInt = this.getRandomInt(threeLetterWords.length);
+        }
+        words.push(threeLetterWords[randomInt]);
         randomInt = this.getRandomInt(fourLetterWords.length);
         words.push(fourLetterWords[randomInt]);
         while (words.indexOf(fourLetterWords[randomInt]) !== -1) {
