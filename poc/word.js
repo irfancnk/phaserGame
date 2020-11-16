@@ -326,7 +326,12 @@ class WordGameController {
 }
 
 var wordGameController = new WordGameController();
-var phaserController = new PhaserController();
+var phaserController = null;
+try {
+    phaserController = new PhaserController();
+} catch (e) {
+    // NODE ENV
+}
 wordGameController.printGrid();
 
 
