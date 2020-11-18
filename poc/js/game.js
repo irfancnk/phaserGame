@@ -1,8 +1,41 @@
 window.onload = function () {
 
+    // tile size, in pixels
+    var tileSize = 40;
+
+    let maxLength = 16;
+    while (maxLength > 15) {
+        wordGameController = new WordGameController();
+        maxLength = wordGameController.grid.length;
+        if (maxLength < wordGameController.grid[0].length) {
+            maxLength = wordGameController.grid[0].length;
+        }
+    }
+    let charList = [];
+    for (var i = 0; i < wordGameController.wordList.length; i++) {
+        let currentWord = wordGameController.wordList[i];
+        for (var j = 0; j < currentWord.length; j++) {
+            if (!charList.includes(currentWord[j])) {
+                charList.push(currentWord[j]);
+            }
+        }
+    }
+    charList.sort();
+    let chars = "";
+    for (var i = 0; i < charList.length; i++) {
+        chars += charList[i] + " ";
+    }
+
+    document.getElementById("letters").innerHTML = chars;
+
+    document.getElementById("letters")
+    console.log(charList);
 
 
-    var game = new Phaser.Game(600, 600, Phaser.CANVAS, "", {
+    let size = maxLength * tileSize;
+    console.log();
+
+    var game = new Phaser.Game(size, size, Phaser.CANVAS, "", {
         preload: onPreload,
         create: onCreate,
         update: onUpdate
