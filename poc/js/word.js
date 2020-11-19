@@ -6,13 +6,14 @@ try {
     rulesBtn.addEventListener('click', () => rules.classList.add('show'));
     closeBtn.addEventListener('click', () => rules.classList.remove('show'));
 } catch (e) {
+    console.log(e);
     // NOT NODE ENV
 }
 
 
-const threeLetterWords = ["AGE", "AIR", "AND", "APP", "BAG", "BOY"];
-const fourLetterWords = ["GIRL", "BABY", "STAR", "ARMY", "COOL", "CODE"];
-const fiveLetterWords = ["BOARD", "APPLE", "TIGER", "WORLD", "BLACK"];
+const threeLetterWords = ["ACT","ACE","AGE","ALE","BAG","BED","BEE","BOO","BOW","BOX"];
+const fourLetterWords = ["ABLE", "AGED", "AREA", "BEAR", "BEER", "BEEN", "BEAT", "BOAT", "DEAL", "DEEP"];
+const fiveLetterWords = ["BOARD", "APPLE", "ALONE", "HOUSE", "BLACK", "SUGAR", "DREAM", "PEACE"];
 
 
 class WordGameController {
@@ -94,6 +95,10 @@ class WordGameController {
                     }
                 }
             }
+        }
+        for (var i = 0; i < this.boardWordList.length; i++) {
+            this.boardWordList[i].x = this.boardWordList[i].x - leftX;
+            this.boardWordList[i].y = this.boardWordList[i].y - topY;
         }
         for (var i = topY; i <= botY; i++) {
             var newArray = [];
@@ -329,14 +334,6 @@ class WordGameController {
 
 }
 
-var wordGameController = new WordGameController();
-var phaserController = null;
-try {
-    phaserController = new PhaserController();
-} catch (e) {
-    // NODE ENV
-}
-wordGameController.printGrid();
 
 
 

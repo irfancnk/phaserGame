@@ -1,16 +1,145 @@
-window.onload = function () {
+var wordGameController = new WordGameController();
+var game;
+// tile size, in pixels
+var tileSize = 40;
+// number of tiles per row/column
+var fieldSize = 10;
+// different kind of tiles allowed
+var tileTypes = 27
+// array with all game tiles
+var tileArray = [];
+// game points
+var points = 0;
 
-    // tile size, in pixels
-    var tileSize = 40;
+function restartCallback() {
+    location.reload();
+}
 
-    let maxLength = 16;
-    while (maxLength > 15) {
-        wordGameController = new WordGameController();
-        maxLength = wordGameController.grid.length;
-        if (maxLength < wordGameController.grid[0].length) {
-            maxLength = wordGameController.grid[0].length;
+
+function showRulesCallback() {
+    rules.classList.add('show')
+}
+
+function closeRulesCallback() {
+    rules.classList.remove('show')
+}
+
+
+function hintCallback() {
+    for (var i = 0; i < tileArray.length; i++) {
+        for (var j = 0; j < tileArray[i].length; j++) {
+            if (tileArray[i][j].tileDesc.letter !== "." && !tileArray[i][j].tileDesc.show) {
+                tileArray[i][j].tileDesc.show = true;
+                return;
+            }
         }
     }
+}
+
+function tryCallback() {
+    let guess = document.getElementById("fname").value.toUpperCase();
+    document.getElementById("fname").value = "";
+    let guessList = wordGameController.boardWordList.filter(x => x.word === guess);
+    if (guessList.length > 0) {
+        let hit = guessList[0];
+        if (hit.axis === "V") {
+            for (var i = 0; i < guess.length; i++) {
+                if (!tileArray[hit.y + i][hit.x].tileDesc.show) {
+                    tileArray[hit.y + i][hit.x].tileDesc.show = true;
+                    points += 1;
+                }
+            }
+        } else if (hit.axis === "H") {
+            for (var i = 0; i < guess.length; i++) {
+                if (!tileArray[hit.y][hit.x + i].tileDesc.show) {
+                    tileArray[hit.y][hit.x + i].tileDesc.show = true;
+                    points += 1;
+                }
+            }
+        }
+    }
+
+    // console.log(wordGameController.wordList);
+    // console.log(wordGameController);
+    // console.log(guess);
+}
+
+
+
+// THE GAME IS PRELOADING
+function onPreload() {
+    // loading the spritesheet with all tiles
+    game.load.spritesheet("tiles", "assets/alphabet.png", tileSize, tileSize);
+}
+
+// THE GAME HAS BEEN CREATED
+function onCreate() {
+    // generating the game field
+    for (i = 0; i < wordGameController.grid.length; i++) {
+        tileArray[i] = [];
+        for (j = 0; j < wordGameController.grid[0].length; j++) {
+            var randomTile;
+            var theTile = game.add.sprite(j * tileSize, i * tileSize, "tiles");
+            if (wordGameController.grid[i][j] === ".") {
+                randomTile = 26;
+                theTile.tileDesc = {
+                    letter : wordGameController.grid[i][j],
+                    show : false,
+                    i : i,
+                    j : j
+                }
+            } else {
+                randomTile = 27;
+                theTile.tileDesc = {
+                    letter : wordGameController.grid[i][j],
+                    show : false,
+                    i : i,
+                    j : j
+                }
+                // randomTile = wordGameController.grid[i][j].charCodeAt(0) - 65;
+            }
+            // "frame" and "value" are custom attributes
+            theTile.frame = randomTile;
+            theTile.value = randomTile;
+            tileArray[i][j] = theTile;
+        }
+    }
+}
+
+
+// THE GAME IS GOING TO BE UPDATED
+function onUpdate() {
+    document.getElementById("points").innerHTML = "Points : " + points;
+    for (var i = 0; i < tileArray.length; i++) {
+        for (var j = 0; j < tileArray[i].length; j++) {
+            if (tileArray[i][j].tileDesc.letter !== "." && tileArray[i][j].tileDesc.show) {
+                let tile = tileArray[i][j].tileDesc.letter.charCodeAt(0) - 65;
+                // "frame" and "value" are custom attributes
+                tileArray[i][j].frame = tile;
+                tileArray[i][j].value = tile;
+            }
+        }
+    }
+
+    let anyLeft = false;
+    for (var i = 0; i < tileArray.length; i++) {
+        for (var j = 0; j < tileArray[i].length; j++) {
+            if (tileArray[i][j].tileDesc.letter !== "." && !tileArray[i][j].tileDesc.show) {
+                anyLeft = true;
+            }
+        }
+    }
+    if (!anyLeft) {
+        document.getElementById("restartButton").disabled = false;
+        document.getElementById("letters").innerHTML = "Good game, well played. Ez.";
+
+    }
+
+}
+
+
+
+function onLoad() {
     let charList = [];
     for (var i = 0; i < wordGameController.wordList.length; i++) {
         let currentWord = wordGameController.wordList[i];
@@ -25,227 +154,13 @@ window.onload = function () {
     for (var i = 0; i < charList.length; i++) {
         chars += charList[i] + " ";
     }
-
     document.getElementById("letters").innerHTML = chars;
-
-    document.getElementById("letters")
-    console.log(charList);
-
-
-    let size = maxLength * tileSize;
-    console.log();
-
-    var game = new Phaser.Game(size, size, Phaser.CANVAS, "", {
+    game = new Phaser.Game(wordGameController.grid[0].length * tileSize, wordGameController.grid.length * tileSize, Phaser.CANVAS, "", {
         preload: onPreload,
         create: onCreate,
         update: onUpdate
     });
-    // tile size, in pixels
-    var tileSize = 40;
-    // number of tiles per row/column
-    var fieldSize = 10;
-    // different kind of tiles allowed
-    var tileTypes = 27
-    // are we dragging?
-    var dragging = false;
-    // row to move
-    var movingRow;
-    // column to move
-    var movingCol;
-    // array with all game tiles
-    var tileArray = [];
-    // x coordinate saved when the player starts dragging
-    var startX;
-    // y coordinate saved when the player starts dragging
-    var startY;
-    // horizontal distance travelled during dragging
-    var distX;
-    // vertical distance travelled during dragging
-    var distY;
-    // dragging direction
-    var dragDirection = "";
-    // temporary tile
-    var tempTile;
-    // THE GAME IS PRELOADING
-    function onPreload() {
-        // loading the spritesheet with all tiles
-        game.load.spritesheet("tiles", "assets/alphabet.png", tileSize, tileSize);
-    }
-    // THE GAME HAS BEEN CREATED
-    function onCreate() {
-        // console.log(wordGameController.grid);
-        let maxLength = 16;
-        while (maxLength > 15) {
-            maxLength = wordGameController.grid.length;
-            if (maxLength < wordGameController.grid[0].length) {
-                maxLength = wordGameController.grid[0].length;
-            }
-            wordGameController.initializeGame();
-        }
-        // generating the game field
-        for (i = 0; i < wordGameController.grid.length; i++) {
-            tileArray[i] = [];
-            for (j = 0; j < wordGameController.grid[0].length; j++) {
-                var randomTile;
-                if (wordGameController.grid[i][j] === ".") {
-                    randomTile = 26;
-                } else {
-                    randomTile = wordGameController.grid[i][j].charCodeAt(0) - 65;
-                }
-                var theTile = game.add.sprite(j * tileSize, i * tileSize, "tiles");
-                // "frame" and "value" are custom attributes
-                theTile.frame = randomTile;
-                theTile.value = randomTile;
-                tileArray[i][j] = theTile;
-            }
-        }
-        // at this time we also create temporary tiles
-        tempTile = game.add.sprite(0, 0, "tiles");
-        tempTile.visible = false;
-        // listener for input down
-        game.input.onDown.add(pickTile, this);
-    }
-    // A TILE HAS BEEN PICKED
-    function pickTile() {
-        // Saving input coordinates
-        startX = game.input.worldX;
-        startY = game.input.worldY;
-        // Saving row and column numbers
-        movingRow = Math.floor(startY / tileSize);
-        movingCol = Math.floor(startX / tileSize);
-        // now dragging is allowed
-        dragging = true
-        // updating listeners
-        game.input.onDown.remove(pickTile, this);
-        game.input.onUp.add(releaseTile, this);
-    }
-    // A TILE HAS BEEN RELEASE3D
-    function releaseTile() {
-        // did we drag horizontally or vertically?
-        switch (dragDirection) {
-            case "horizontal":
-                // determining how many tiles we shifted and adjusting game array
-                // and tiles accordingly
-                var shiftAmount = Math.floor(distX / (tileSize / 2));
-                shiftAmount = Math.ceil(shiftAmount / 2) % fieldSize;
-                var tempArray = [];
-                if (shiftAmount > 0) {
-                    for (i = 0; i < fieldSize; i++) {
-                        tempArray[(shiftAmount + i) % fieldSize] = tileArray[movingRow][i].value;
-                    }
-                } else {
-                    shiftAmount *= -1;
-                    for (i = 0; i < fieldSize; i++) {
-                        tempArray[i] = tileArray[movingRow][(shiftAmount + i) % fieldSize].value;
-                    }
-                }
-                for (i = 0; i < fieldSize; i++) {
-                    tileArray[movingRow][i].value = tempArray[i];
-                    tileArray[movingRow][i].frame = tempArray[i];
-                    tileArray[movingRow][i].x = i * tileSize;
-                }
-                break;
-            case "vertical":
-                // determining how many tiles we shifted and adjusting game array
-                // and tiles accordingly
-                var shiftAmount = Math.floor(distY / (tileSize / 2));
-                shiftAmount = Math.ceil(shiftAmount / 2) % fieldSize;
-                var tempArray = [];
-                if (shiftAmount > 0) {
-                    for (i = 0; i < fieldSize; i++) {
-                        tempArray[(shiftAmount + i) % fieldSize] = tileArray[i][movingCol].value;
-                    }
-                } else {
-                    shiftAmount *= -1;
-                    for (i = 0; i < fieldSize; i++) {
-                        tempArray[i] = tileArray[(shiftAmount + i) % fieldSize][movingCol].value;
-                    }
-                }
-                for (i = 0; i < fieldSize; i++) {
-                    tileArray[i][movingCol].value = tempArray[i];
-                    tileArray[i][movingCol].frame = tempArray[i];
-                    tileArray[i][movingCol].y = i * tileSize;
-                }
-                break;
-        }
-        // let the player be able to pick and drag again
-        dragDirection = "";
-        dragging = false;
-        tempTile.visible = false;
-        game.input.onUp.remove(releaseTile, this);
-        game.input.onDown.add(pickTile, this);
-    }
-    // THE GAME IS GOING TO BE UPDATED
-    function onUpdate() {
-        if (dragging) {
-            distX = game.input.worldX - startX;
-            distY = game.input.worldY - startY;
-            switch (dragDirection) {
-                // dragging, but still looking for a direction
-                case "":
-                    var dist = distX * distX + distY * distY;
-                    if (dist > 25) {
-                        var dragAngle = Math.abs(Math.atan2(distY, distX));
-                        if ((dragAngle > Math.PI / 4 && dragAngle < 3 * Math.PI / 4)) {
-                            dragDirection = "vertical";
-                        } else {
-                            dragDirection = "horizontal";
-                        }
-                    }
-                    break;
-                // horizontal drag
-                case "horizontal":
-                    tempTile.visible = false;
-                    tempTile.y = movingRow * tileSize;
-                    var deltaX = (Math.floor(distX / tileSize) % fieldSize);
-                    if (deltaX >= 0) {
-                        tempTile.frame = tileArray[movingRow][fieldSize - 1 - deltaX].value;
-                    } else {
-                        deltaX = deltaX * -1 - 1;
-                        tempTile.frame = tileArray[movingRow][deltaX].value;
-                    }
-                    for (i = 0; i < fieldSize; i++) {
-                        tileArray[movingRow][i].x = (i * tileSize + distX) % (tileSize * fieldSize);
-                        if (tileArray[movingRow][i].x < 0) {
-                            tileArray[movingRow][i].x += tileSize * fieldSize;
-                        }
-                        if (distX % tileSize > 0) {
-                            tempTile.visible = true;
-                            tempTile.x = distX % tileSize - tileSize;
-                        }
-                        if (distX % tileSize < 0) {
-                            tempTile.visible = true;
-                            tempTile.x = distX % tileSize;
-                        }
-                    }
-                    break;
-                // vertical drag
-                case "vertical":
-                    tempTile.visible = false;
-                    tempTile.x = movingCol * tileSize;
-                    var deltaY = (Math.floor(distY / tileSize) % fieldSize);
-                    if (deltaY >= 0) {
-                        tempTile.frame = tileArray[fieldSize - 1 - deltaY][movingCol].value;
-                    } else {
-                        deltaY = deltaY * -1 - 1;
-                        tempTile.frame = tileArray[deltaY][movingCol].value;
-                    }
-                    for (i = 0; i < fieldSize; i++) {
-                        tileArray[i][movingCol].y = (i * tileSize + distY) % (tileSize * fieldSize);
-                        if (tileArray[i][movingCol].y < 0) {
-                            tileArray[i][movingCol].y += tileSize * fieldSize;
-                        }
-                        if (distY % tileSize > 0) {
-                            tempTile.visible = true;
-                            tempTile.y = distY % tileSize - tileSize;
-                        }
-                        if (distY % tileSize < 0) {
-                            tempTile.visible = true;
-                            tempTile.y = distY % tileSize;
-                        }
-                    }
-                    break;
-            }
-        }
-    }
 };
+
+
+window.onload = onLoad;
