@@ -10,6 +10,8 @@ var tileTypes = 27
 var tileArray = [];
 // game points
 var points = 0;
+// ASK FOR ADD
+var watchAddAsked = false;
 
 function restartCallback() {
     location.reload();
@@ -26,6 +28,12 @@ function closeRulesCallback() {
 
 
 function hintCallback() {
+    if (!watchAddAsked) {
+        var r = confirm("Do you agree watching an advertisement for getting a hint?");
+        alert("Kidding...hehehe...");
+        watchAddAsked = true;
+    }
+
     for (var i = 0; i < tileArray.length; i++) {
         for (var j = 0; j < tileArray[i].length; j++) {
             if (tileArray[i][j].tileDesc.letter !== "." && !tileArray[i][j].tileDesc.show) {
@@ -46,14 +54,14 @@ function tryCallback() {
             for (var i = 0; i < guess.length; i++) {
                 if (!tileArray[hit.y + i][hit.x].tileDesc.show) {
                     tileArray[hit.y + i][hit.x].tileDesc.show = true;
-                    points += 1;
+                    points += 3;
                 }
             }
         } else if (hit.axis === "H") {
             for (var i = 0; i < guess.length; i++) {
                 if (!tileArray[hit.y][hit.x + i].tileDesc.show) {
                     tileArray[hit.y][hit.x + i].tileDesc.show = true;
-                    points += 1;
+                    points += 3;
                 }
             }
         }
