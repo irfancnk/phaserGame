@@ -1,4 +1,9 @@
 body {
+    height: 100vh;
     background: #282b38;
-    margin: 0px 0px 0px 0px;
+}
+
+canvas {
+    display: block;
+    margin: auto;
 }
