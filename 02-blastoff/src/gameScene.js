@@ -136,26 +136,26 @@ class BlastScene extends Phaser.Scene {
         let newGem = 0;
         let newGemsList = this.gameLogic.createNewGems();
         // newGemsList = newGemsList.sort(this.compareRow)
-        for (let i = 0; i < newGemsList.length; i++) {
-            newGem++;
-            const currentNewGem = newGemsList[i];
-            let sprite = this.poolArray.pop();
-            sprite.alpha = 1;
-            sprite.y = gameOptions.boardOffset.y - 50 + gameOptions.gemSize * (currentNewGem.row - currentNewGem.deltaRow + 1) - gameOptions.gemSize / 2;
-            sprite.setTexture('solidColor' + this.gameLogic.getValueAt(currentNewGem.row, currentNewGem.column));
-            this.tweens.add({
-                targets: sprite,
-                y: gameOptions.boardOffset.y + gameOptions.gemSize * currentNewGem.row,
-                duration: gameOptions.fallSpeed * currentNewGem.deltaRow,
-                callbackScope: this,
-                onComplete: function () {
-                    newGem--;
-                    if (newGem == 0) {
-                        this.canPick = true
-                    }
-                }
-            });
-        }
+        // for (let i = 0; i < newGemsList.length; i++) {
+        //     newGem++;
+        //     const currentNewGem = newGemsList[i];
+        //     let sprite = this.poolArray.pop();
+        //     sprite.alpha = 1;
+        //     sprite.y = gameOptions.boardOffset.y - 50 + gameOptions.gemSize * (currentNewGem.row - currentNewGem.deltaRow + 1) - gameOptions.gemSize / 2;
+        //     sprite.setTexture('solidColor' + this.gameLogic.getValueAt(currentNewGem.row, currentNewGem.column));
+        //     this.tweens.add({
+        //         targets: sprite,
+        //         y: gameOptions.boardOffset.y + gameOptions.gemSize * currentNewGem.row,
+        //         duration: gameOptions.fallSpeed * currentNewGem.deltaRow,
+        //         callbackScope: this,
+        //         onComplete: function () {
+        //             newGem--;
+        //             if (newGem == 0) {
+        //                 this.canPick = true
+        //             }
+        //         }
+        //     });
+        // }
         if (newGemsList.length === 0) {
             this.canPick = true;
         }
