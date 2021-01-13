@@ -135,6 +135,7 @@ class BlastScene extends Phaser.Scene {
         this.canPick = false;
         let newGem = 0;
         let newGemsList = this.gameLogic.createNewGems();
+        console.log(newGemsList);
         // newGemsList = newGemsList.sort(this.compareRow)
         // for (let i = 0; i < newGemsList.length; i++) {
         //     newGem++;
