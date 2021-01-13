@@ -40,17 +40,6 @@ class BlastScene extends Phaser.Scene {
     }
 
     tileSelect(pointer) {
-        let visionArray = []
-        for (let i = 0; i < 9; i++) {
-            visionArray.push([]);
-            for (let j = 0; j < 9; j++) {
-                visionArray[i].push(this.gameLogic.gameArray[i][j].value)
-            }
-        }
-        console.log("***");
-        console.table(visionArray)
-        console.log("***");
-
         if (this.canPick) {
             let colSelectOffset = gameOptions.boardOffset.x - gameOptions.gemSize / 2;
             let rowSelectOffset = gameOptions.boardOffset.y + 8 - gameOptions.gemSize / 2;
@@ -108,24 +97,45 @@ class BlastScene extends Phaser.Scene {
         if (fallingGemsList.length === 0) {
             this.canPick = true;
         }
-
-        let visionArray = []
-        for (let i = 0; i < 9; i++) {
-            visionArray.push([]);
-            for (let j = 0; j < 9; j++) {
-                visionArray[i].push(this.gameLogic.gameArray[i][j].value)
-            }
-        }
-        console.log("***");
-        console.table(visionArray)
-        console.log("***");
-
     }
+
+    compareRow(a, b) {
+        if (a.row < b.row)
+            return -1;
+        if (a.row > b.row)
+            return 1;
+        return 0;
+    }
+    compareColumn(a, b) {
+        if (a.column < b.column)
+            return -1;
+        if (a.column > b.column)
+            return 1;
+        return 0;
+    }
+
+
+    compareY(a, b) {
+        if (a.y < b.y)
+            return -1;
+        if (a.y > b.y)
+            return 1;
+        return 0;
+    }
+    compareX(a, b) {
+        if (a.x < b.x)
+            return -1;
+        if (a.x > b.x)
+            return 1;
+        return 0;
+    }
+
 
     fallNewGems() {
         this.canPick = false;
         let newGem = 0;
         let newGemsList = this.gameLogic.createNewGems();
+        // newGemsList = newGemsList.sort(this.compareRow)
         for (let i = 0; i < newGemsList.length; i++) {
             newGem++;
             const currentNewGem = newGemsList[i];
@@ -158,6 +168,6 @@ class BlastScene extends Phaser.Scene {
 
     makeGemsFall() {
         this.fallInGameGems()
-        // this.fallNewGems()
+        this.fallNewGems()
     }
 }
