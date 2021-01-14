@@ -97,6 +97,13 @@ class BlastScene extends Phaser.Scene {
                 }
             });
         }
+        for (let i = 0; i < this.gameLogic.rows; i++) {
+            for (let j = 0; j < this.gameLogic.columns; j++) {
+                if (this.gameLogic.grid[i][j].isEmpty) {
+                    this.gameLogic.grid[i][j].sprite.destroy();
+                }
+            }            
+        }
 
         // for (let i = 0; i < fallingSpriteList.length; i++) {
         //     fallingItemCount++;
