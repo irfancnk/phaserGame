@@ -1,3 +1,4 @@
+let game;
 let gameOptions = {
     gemSize: 80,
     boardOffset: {
@@ -5,9 +6,8 @@ let gameOptions = {
         y: 400
     },
     destroySpeed: 200,
-    fallSpeed: 100
+    fallSpeed: 50
 }
-let game;
 
 
 function onLoadCallback() {
@@ -22,13 +22,5 @@ function onLoadCallback() {
     resize();
     window.addEventListener("resize", resize, false);
 }
-
-
-
-
-
-
-
-
 
 window.onload = onLoadCallback;

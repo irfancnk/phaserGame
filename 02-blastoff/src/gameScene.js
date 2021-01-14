@@ -29,12 +29,13 @@ class BlastScene extends Phaser.Scene {
 
 
     drawField() {
-        for (let i = this.gameLogic.getRows() - 1; i >= 0; i--) {
-            for (let j = 0; j < this.gameLogic.getColumns(); j++) {
-                let y = gameOptions.boardOffset.y + gameOptions.gemSize * i;
-                let x = gameOptions.boardOffset.x + gameOptions.gemSize * j;
-                let gem = this.add.sprite(x, y, 'solidColor' + this.gameLogic.getValueAt(i, j)).setScale(0.80);
-                this.gameLogic.setCustomData(i, j, gem);
+        let currentX, currentY;
+        for (let i = this.gameLogic.rows - 1; i >= 0; i--) {
+            currentY = gameOptions.boardOffset.y + gameOptions.gemSize * i;
+            for (let j = 0; j < this.gameLogic.columns; j++) {
+                currentX = gameOptions.boardOffset.x + gameOptions.gemSize * j;
+                let gem = this.add.sprite(currentX, currentY, this.gameLogic.grid[i][j].getSpriteName()).setScale(0.80);
+                this.gameLogic.grid[i][j].sprite = gem;
             }
         }
     }
@@ -46,63 +47,141 @@ class BlastScene extends Phaser.Scene {
             let row = Math.floor((pointer.y - rowSelectOffset) / gameOptions.gemSize);
             let col = Math.floor((pointer.x - colSelectOffset) / gameOptions.gemSize);
             if (this.gameLogic.validPick(row, col)) {
-                let connectedItems = this.gameLogic.listConnectedItems(row, col);
+                let connectedItems = this.gameLogic.getConnectedItemList(row, col);
                 if (connectedItems.length >= 2) {
                     this.canPick = false;
-                    let destroyed = 0;
+                    let totalDestroyed = 0;
                     for (let i = 0; i < connectedItems.length; i++) {
-                        destroyed++;
-                        let customData = this.gameLogic.getCustomDataAt(connectedItems[i].row, connectedItems[i].column);
-                        this.poolArray.push(customData);
+                        totalDestroyed++;
                         this.tweens.add({
-                            targets: customData,
+                            targets: connectedItems[i].sprite,
                             alpha: 0,
                             duration: gameOptions.destroySpeed,
                             callbackScope: this,
                             onComplete: function () {
-                                destroyed--;
-                                if (destroyed == 0) {
-                                    this.gameLogic.removeConnectedItems([...connectedItems])
-                                    this.makeGemsFall();
+                                totalDestroyed--;
+                                if (totalDestroyed == 0) {
+                                    this.gameLogic.removeConnectedItems(connectedItems)
+                                    this.makeGemsFall(connectedItems);
                                 }
                             }
                         });
                     }
                 }
+            } else {
+                console.log("Invalid Pick");
             }
         }
     }
 
+    makeGemsFall(connectedItems) {
+        this.fallInGameGems()
+        // this.fallNewGems()
+    }
 
     fallInGameGems() {
-        let fallingGems = 0;
-        let fallingGemsList = this.gameLogic.getFallingGems();
-        for (let i = 0; i < fallingGemsList.length; i++) {
-            const currentFallingGem = fallingGemsList[i];
-            const currentTarget = this.gameLogic.getCustomDataAt(currentFallingGem.row, currentFallingGem.column);
-            fallingGems++;
+        let fallingItemCount = 0;
+        let fallingSpriteList = this.gameLogic.getFallingSpriteList();
+        for (let i = 0; i < fallingSpriteList.length; i++) {
+            fallingItemCount++;
             this.tweens.add({
-                targets: currentTarget,
-                y: currentTarget.y + gameOptions.gemSize * currentFallingGem.deltaRow,
-                duration: gameOptions.fallSpeed * currentFallingGem.deltaRow,
+                targets: fallingSpriteList[i].block.sprite,
+                y: fallingSpriteList[i].block.sprite.y + gameOptions.gemSize * fallingSpriteList[i].delta,
+                duration: gameOptions.fallSpeed * fallingSpriteList[i].delta,
                 callbackScope: this,
                 onComplete: function () {
-                    fallingGems--;
-                    if (fallingGems == 0) {
+                    fallingItemCount--;
+                    if (fallingItemCount == 0) {
                         this.canPick = true
                     }
                 }
             });
         }
-        if (fallingGemsList.length === 0) {
-            this.canPick = true;
-        }
+
+        // for (let i = 0; i < fallingSpriteList.length; i++) {
+        //     fallingItemCount++;
+        //     this.tweens.add({
+        //         targets: fallingSpriteList[i].sprite,
+        //         y: fallingSpriteList[i].sprite.y + gameOptions.gemSize * fallingSpriteList[i].delta,
+        //         duration: gameOptions.fallSpeed * fallingSpriteList[i].delta,
+        //         callbackScope: this,
+        //         onComplete: function () {
+        //             fallingItemCount--;
+        //             if (fallingItemCount == 0) {
+        //                 this.canPick = true
+        //             }
+        //         }
+        //     });
+        // }
+        // console.log(this.gameLogic.grid);
+
+
+        // let fallingGemsList = this.gameLogic.getFallingGems();
+        // for (let i = 0; i < fallingGemsList.length; i++) {
+        //     const currentFallingGem = fallingGemsList[i];
+        //     const currentTarget = this.gameLogic.getCustomDataAt(currentFallingGem.row, currentFallingGem.column);
+        //     fallingGems++;
+        //     this.tweens.add({
+        //         targets: currentTarget,
+        //         y: currentTarget.y + gameOptions.gemSize * currentFallingGem.deltaRow,
+        //         duration: gameOptions.fallSpeed * currentFallingGem.deltaRow,
+        //         callbackScope: this,
+        //         onComplete: function () {
+        //             fallingGems--;
+        //             if (fallingGems == 0) {
+        //                 this.canPick = true
+        //             }
+        //         }
+        //     });
+        // }
+        // if (fallingGemsList.length === 0) {
+        //     this.canPick = true;
+        // }
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     compareRow(a, b) {
-        if (a.row < b.row)
-            return -1;
         if (a.row > b.row)
+            return -1;
+        if (a.row < b.row)
             return 1;
         return 0;
     }
@@ -135,28 +214,26 @@ class BlastScene extends Phaser.Scene {
         this.canPick = false;
         let newGem = 0;
         let newGemsList = this.gameLogic.createNewGems();
-        console.log(newGemsList);
-        // newGemsList = newGemsList.sort(this.compareRow)
-        // for (let i = 0; i < newGemsList.length; i++) {
-        //     newGem++;
-        //     const currentNewGem = newGemsList[i];
-        //     let sprite = this.poolArray.pop();
-        //     sprite.alpha = 1;
-        //     sprite.y = gameOptions.boardOffset.y - 50 + gameOptions.gemSize * (currentNewGem.row - currentNewGem.deltaRow + 1) - gameOptions.gemSize / 2;
-        //     sprite.setTexture('solidColor' + this.gameLogic.getValueAt(currentNewGem.row, currentNewGem.column));
-        //     this.tweens.add({
-        //         targets: sprite,
-        //         y: gameOptions.boardOffset.y + gameOptions.gemSize * currentNewGem.row,
-        //         duration: gameOptions.fallSpeed * currentNewGem.deltaRow,
-        //         callbackScope: this,
-        //         onComplete: function () {
-        //             newGem--;
-        //             if (newGem == 0) {
-        //                 this.canPick = true
-        //             }
-        //         }
-        //     });
-        // }
+        newGemsList = newGemsList.sort(this.compareRow)
+        for (let i = 0; i < newGemsList.length; i++) {
+            newGem++;
+            let y = 20
+            let x = gameOptions.boardOffset.x + gameOptions.gemSize * newGemsList[i].column;
+            let number = Math.floor(Math.random() * 4) + 1
+            let gem = this.add.sprite(x, y, 'solidColor' + number).setScale(0.80);
+            this.tweens.add({
+                targets: gem,
+                y: gameOptions.boardOffset.y + gameOptions.gemSize * newGemsList[i].row,
+                duration: gameOptions.fallSpeed * newGemsList[i].deltaRow,
+                callbackScope: this,
+                onComplete: function () {
+                    newGem--;
+                    if (newGem == 0) {
+                        this.canPick = true
+                    }
+                }
+            });
+        }
         if (newGemsList.length === 0) {
             this.canPick = true;
         }
@@ -164,11 +241,4 @@ class BlastScene extends Phaser.Scene {
 
     }
 
-
-
-
-    makeGemsFall() {
-        this.fallInGameGems()
-        this.fallNewGems()
-    }
 }
