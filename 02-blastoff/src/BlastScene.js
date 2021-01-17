@@ -1,224 +1,21 @@
-class Block {
-    constructor(param) {
-        this.row = param.row;
-        this.column = param.column;
-        this.blockType = param.blockType;
-        this.isEmpty = param.isEmpty;
-        this.blockSprite = param.blockSprite;
-    }
-    getSpriteName() {
-        return "solidColor" + this.blockType;
-    }
-    getSpriteX() {
-        return gameOptions.boardOffset.x + gameOptions.blockSize * this.column;
-    }
-    getSpriteY() {
-        return gameOptions.boardOffset.y + gameOptions.blockSize * this.row;
-    }
-    getSpriteFallY() {
-        return (-1) * gameOptions.boardOffset.y + gameOptions.blockSize * this.row;
-    }
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class BlastController {
-    constructor(options) {
-        this.gridRowCount = options.gridRowCount;
-        this.gridColumnCount = options.gridColumnCount;
-        this.gridItemCount = options.gridItemCount;
-        this.grid = [];
-        this.connectedBlockList = [];
-    }
-
-    initializeGrid() {
-        let randomBlockType;
-        for (let i = 0; i < this.gridRowCount; i++) {
-            this.grid.push([]);
-            for (let j = 0; j < this.gridColumnCount; j++) {
-                randomBlockType = Math.floor(Math.random() * this.gridItemCount) + 1;
-                // randomBlockType = predefinedBoard[i][j];
-                this.grid[i].push(new Block({
-                    row: i,
-                    column: j,
-                    blockType: randomBlockType,
-                    isEmpty: false,
-                    sprite: null
-                }));
-            }
-        }
-    }
-
-    isValid(row, column) {
-        if (row >= 0 && column >= 0 && row < this.gridRowCount && column < this.gridColumnCount) {
-            return true;
-        }
-        return false;
-    }
-
-    getConnectedBlockList(row, column) {
-        this.connectedBlockList = [];
-        this.getNeighbours(row, column, this.grid[row][column].blockType);
-        return this.connectedBlockList;
-    }
-
-    getNeighbours(row, column, targetBlockType) {
-        if (this.isValid(row, column)) {
-            if (this.grid[row][column].blockType === targetBlockType) {
-                let filteredList = this.connectedBlockList.filter(x => x.row === row && x.column === column)
-                if (filteredList.length === 0) {
-                    this.connectedBlockList.push(this.grid[row][column]);
-                    this.getNeighbours(row + 1, column, targetBlockType);
-                    this.getNeighbours(row - 1, column, targetBlockType);
-                    this.getNeighbours(row, column + 1, targetBlockType);
-                    this.getNeighbours(row, column - 1, targetBlockType);
-                }
-            }
-        }
-        return;
-    }
-
-    fill() {
-        let swappedSprites = [];
-        for (let i = this.gridRowCount - 1; i >= 0; i--) {
-            for (let j = 0; j < this.gridColumnCount; j++) {
-                if (!this.grid[i][j].isEmpty) {
-                    let emptyBlockBelow = this.countEmptyBlockBelow(i, j)
-                    if (emptyBlockBelow > 0) {
-                        this.swapBlocks(
-                            i,
-                            j,
-                            i + emptyBlockBelow,
-                            j
-                        );
-                        swappedSprites.push({
-                            block: this.grid[i + emptyBlockBelow][j],
-                            deltaRow: emptyBlockBelow
-                        })
-                    }
-                }
-            }
-        }
-        return swappedSprites;
-    }
-
-    countEmptyBlockBelow(row, column) {
-        let emptyCount = 0;
-        for (let i = row; i < this.gridRowCount; i++) {
-            if (this.grid[i][column].isEmpty) {
-                emptyCount++;
-            }
-        }
-        return emptyCount;
-    }
-
-    swapBlocks(row1, column1, row2, column2) {
-        this.grid[row1][column1].isEmpty = true;
-        this.grid[row2][column2].isEmpty = false;
-        this.grid[row2][column2].blockType = this.grid[row1][column1].blockType;
-        this.grid[row2][column2].blockSprite = this.grid[row1][column1].blockSprite;
-    }
-
-    fall() {
-        let createdSprites = [];
-        for (let i = 0; i < this.gridRowCount; i++) {
-            for (let j = 0; j < this.gridColumnCount; j++) {
-                if (this.grid[i][j].isEmpty) {
-                    this.grid[i][j].isEmpty = false;
-                    this.grid[i][j].blockType = Math.floor(Math.random() * this.gridItemCount) + 1;
-                    createdSprites.push(this.grid[i][j]);
-                }
-            }
-        }
-        return createdSprites;
-    }
-
-
-    printGrid() {
-        for (let i = 0; i < this.gridRowCount; i++) {
-            let rowString = "";
-            for (let j = 0; j < this.gridColumnCount; j++) {
-                rowString += "|" + this.grid[i][j].isEmpty;
-            }
-            console.log(rowString);
-        }
-    }
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class BlastScene extends Phaser.Scene {
 
     constructor() {
         super("BlastScene");
+        this.cube_collect_sound = null;
+        this.cube_explode_sound = null;
+        this.movesText = null;
+        this.goalsText = [];
+        this.goalSprites = [];
         this.canPick = true;
         this.blastController = new BlastController({
             gridRowCount: 9,
             gridColumnCount: 9,
-            gridItemCount: 4
+            gridItemCount: 4,
+            moves: gameOptions.moves,
+            goals: gameOptions.goals
         });
         this.blastController.initializeGrid();
-        this.cube_collect_sound = null;
-        this.cube_explode_sound = null;
     }
 
     preload() {
@@ -235,6 +32,8 @@ class BlastScene extends Phaser.Scene {
 
     create() {
         this.add.image(375, 667, 'background');
+        this.adjustMoves(this.blastController.moves);
+        this.adjustGoals();
         this.cube_collect_sound = this.sound.add('cube_collect');
         this.cube_explode_sound = this.sound.add('cube_explode');
         this.drawField();
@@ -253,13 +52,16 @@ class BlastScene extends Phaser.Scene {
     }
 
     blockSelect(pointer) {
-        if (this.canPick) {
+        if (this.canPick && this.blastController.moves > 0) {
             let { row, column } = this.getPointerRowColumn(pointer);
             if (this.blastController.isValid(row, column)) {
                 let connectedBlockList = this.blastController.getConnectedBlockList(row, column);
                 if (connectedBlockList.length > 1) {
-                    let totalDestroyed = 0;
+                    this.blastController.makeMove((move) => this.adjustMoves(move));
+                    this.blastController.checkGoals((blockType, amount) => this.adjustGoals(blockType, amount), connectedBlockList);
                     this.cube_explode_sound.play();
+                    this.canPick = false;
+                    let totalDestroyed = 0;
                     for (let i = 0; i < connectedBlockList.length; i++) {
                         totalDestroyed++;
                         this.tweens.add({
@@ -276,6 +78,9 @@ class BlastScene extends Phaser.Scene {
                             }
                         });
                     }
+                } else {
+                    let [singleBlock] = connectedBlockList;
+                    this.shakeSprite(singleBlock.blockSprite);
                 }
             }
         }
@@ -338,6 +143,62 @@ class BlastScene extends Phaser.Scene {
                     this.canPick = true;
                 }
             });
+        }
+    }
+
+    shakeSprite(sprite) {
+        this.cube_collect_sound.play();
+        this.tweens.add({
+            targets: sprite,
+            rotation: 0.5,
+            duration: gameOptions.shakeSpeed,
+            callbackScope: this,
+            onComplete: function () {
+                this.tweens.add({
+                    targets: sprite,
+                    rotation: -0.5,
+                    duration: gameOptions.shakeSpeed,
+                    callbackScope: this,
+                    onComplete: function () {
+                        this.tweens.add({
+                            targets: sprite,
+                            rotation: 0,
+                            duration: gameOptions.shakeSpeed,
+                            callbackScope: this
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    adjustMoves(moves) {
+        if (this.movesText === null) {
+            this.movesText = this.add.text(660 - moves.toString().length * 20, 60, moves.toString(), moveTextStyle);
+        } else {
+            this.movesText.setText(moves.toString());
+            this.movesText.setPosition(660 - moves.toString().length * 20, 60);
+        }
+
+    }
+
+    adjustGoals(blockType, amount) {
+        if (this.goalsText.length === 0) {
+            for (let i = 0; i < this.blastController.goals.length; i++) {
+                this.goalSprites.push(
+                    this.add.sprite(350 + i * 120, 100, `solidColor${this.blastController.goals[i].type}`).setScale(0.50)
+                );
+                this.goalsText.push(
+                    {
+                        blockType: this.blastController.goals[i].type,
+                        text: this.add.text(360 + i * 120, 100, this.blastController.goals[i].amount.toString(), goalTextStyle)
+                    }
+                );
+            }
+        } else {
+            let hitGoalText = this.goalsText.filter(x => x.blockType === blockType);
+            hitGoalText[0].text.setText(amount.toString());
+
         }
     }
 
