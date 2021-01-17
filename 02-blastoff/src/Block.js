@@ -5,6 +5,7 @@ class Block {
         this.blockType = param.blockType;
         this.isEmpty = param.isEmpty;
         this.blockSprite = param.blockSprite;
+        this.particles = [];
     }
     getSpriteName() {
         return "solidColor" + this.blockType;
@@ -18,5 +19,4 @@ class Block {
     getSpriteFallY() {
         return (-1) * gameOptions.boardOffset.y + gameOptions.blockSize * this.row;
     }
-
 }

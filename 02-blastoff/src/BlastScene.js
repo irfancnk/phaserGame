@@ -98,6 +98,48 @@ class BlastScene extends Phaser.Scene {
         for (let i = 0; i < connectedBlockList.length; i++) {
             connectedBlockList[i].blockSprite.destroy();
             connectedBlockList[i].isEmpty = true;
+            var group1 = this.physics.add.group({
+                key: 'solidColorParticle1',
+                x: connectedBlockList[i].getSpriteX(),
+                y: connectedBlockList[i].getSpriteY(),
+                frameQuantity: 48,
+                setScale: { x: 0.15, y: 0.15},
+                velocityX: (Math.floor(Math.random() * 4) + 1) * 100,
+                velocityY: (Math.floor(Math.random() * 4) + 1) * 100,
+            });
+            var group2 = this.physics.add.group({
+                key: 'solidColorParticle2',
+                x: connectedBlockList[i].getSpriteX(),
+                y: connectedBlockList[i].getSpriteY(),
+                frameQuantity: 48,
+                setScale: { x: 0.30, y: 0.30},
+                velocityX: (Math.floor(Math.random() * 4) + 1) * 100,
+                velocityY: (Math.floor(Math.random() * 4) + 1) * 100,
+            });
+    
+
+            // connectedBlockList[i].particles.push(this.add.sprite(connectedBlockList[i].getSpriteX(), connectedBlockList[i].getSpriteY() - 40, "solidColorParticle1").setScale(0.15));
+            // connectedBlockList[i].particles.push(this.add.sprite(connectedBlockList[i].getSpriteX(), connectedBlockList[i].getSpriteY() + 40, "solidColorParticle1").setScale(0.30));
+            // connectedBlockList[i].particles.push(this.add.sprite(connectedBlockList[i].getSpriteX() - 40, connectedBlockList[i].getSpriteY(), "solidColorParticle1").setScale(0.30));
+            // connectedBlockList[i].particles.push(this.add.sprite(connectedBlockList[i].getSpriteX() + 40, connectedBlockList[i].getSpriteY(), "solidColorParticle1").setScale(0.15));
+            // connectedBlockList[i].particles.push(this.add.sprite(connectedBlockList[i].getSpriteX() - 20, connectedBlockList[i].getSpriteY() - 20, "solidColorParticle1").setScale(0.15));
+            // connectedBlockList[i].particles.push(this.add.sprite(connectedBlockList[i].getSpriteX() - 20, connectedBlockList[i].getSpriteY() + 20, "solidColorParticle1").setScale(0.30));
+            // connectedBlockList[i].particles.push(this.add.sprite(connectedBlockList[i].getSpriteX() + 20, connectedBlockList[i].getSpriteY() - 20, "solidColorParticle2").setScale(0.30));
+            // connectedBlockList[i].particles.push(this.add.sprite(connectedBlockList[i].getSpriteX() + 20, connectedBlockList[i].getSpriteY() + 20, "solidColorParticle2").setScale(0.15));
+            // for (let j = 0; j < connectedBlockList[i].particles.length; j++) {
+            //     this.tweens.add({
+            //         targets: connectedBlockList[i].particles[j],
+            //         alpha: 0,
+            //         x: connectedBlockList[i].particles[j].x + Math.floor(Math.random() * 10) * 20 * (Math.random() < 0.5 ? -1 : 1),
+            //         y: connectedBlockList[i].particles[j].y + Math.floor(Math.random() * 10) * 20 * (Math.random() < 0.5 ? -1 : 1),
+            //         duration: gameOptions.destroySpeed,
+            //         callbackScope: this,
+            //         onComplete: function () {
+            //             connectedBlockList[i].particles[j].destroy()
+            //         }
+            //     });
+            // }
+
         }
     }
 
@@ -198,7 +240,6 @@ class BlastScene extends Phaser.Scene {
         } else {
             let hitGoalText = this.goalsText.filter(x => x.blockType === blockType);
             hitGoalText[0].text.setText(amount.toString());
-
         }
     }
 

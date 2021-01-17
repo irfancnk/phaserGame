@@ -3,7 +3,15 @@ window.onload = function onLoadCallback() {
         width: 750,
         height: 1334,
         scene: BlastScene,
-        backgroundColor: 0x222222
+        backgroundColor: 0x222222,
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: {
+                    y: 1600
+                }
+            }
+        }
     }
     game = new Phaser.Game(gameConfig);
     windowController = new WindowController();
