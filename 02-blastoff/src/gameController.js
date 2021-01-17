@@ -1,6 +1,6 @@
 let game;
 let gameOptions = {
-    gemSize: 80,
+    blockSize: 80,
     boardOffset: {
         x: 55,
         y: 400
@@ -8,6 +8,18 @@ let gameOptions = {
     destroySpeed: 200,
     fallSpeed: 50
 }
+
+let predefinedBoard = [
+    [1, 2, 3, 1, 2, 3, 1, 2, 3],
+    [4, 4, 3, 3, 4, 4, 4, 4, 4],
+    [1, 1, 1, 3, 3, 1, 1, 1, 1],
+    [1, 1, 1, 1, 3, 1, 1, 1, 1],
+    [1, 1, 1, 3, 3, 1, 1, 4, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 3, 1, 1, 1, 1, 4, 1],
+    [1, 1, 3, 3, 1, 1, 1, 4, 1],
+    [1, 1, 1, 3, 1, 2, 2, 1, 1],
+];
 
 
 function onLoadCallback() {
