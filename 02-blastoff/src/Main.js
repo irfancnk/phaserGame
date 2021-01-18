@@ -8,7 +8,7 @@ window.onload = function onLoadCallback() {
             default: 'arcade',
             arcade: {
                 gravity: {
-                    y: 3500
+                    y: 4000
                 }
             }
         }

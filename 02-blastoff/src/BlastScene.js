@@ -2,6 +2,8 @@ class BlastScene extends Phaser.Scene {
 
     constructor() {
         super("BlastScene");
+        this.particleEffectFactory = null;
+        this.spriteEffectFactory = null;
         this.cube_collect_sound = null;
         this.cube_explode_sound = null;
         this.movesText = null;
@@ -38,6 +40,8 @@ class BlastScene extends Phaser.Scene {
         this.cube_collect_sound = this.sound.add('cube_collect');
         this.cube_explode_sound = this.sound.add('cube_explode');
         this.drawField();
+        this.particleEffectFactory = new ParticleEffectFactory(this.physics);
+        this.spriteEffectFactory = new SpriteEffectFactory(this.tweens);
         this.input.on("pointerdown", this.blockSelect, this);
     }
 
@@ -120,6 +124,9 @@ class BlastScene extends Phaser.Scene {
     }
 
     fall(swappedSprites) {
+        const callback = () => {
+            this.canPick = true;
+        }
         let createdSprites = [];
         let createdBlocks = this.blastController.fall().sort(this.compareRow);
 
@@ -129,52 +136,18 @@ class BlastScene extends Phaser.Scene {
             createdSprites.push(currentBlock);
         }
         for (let i = 0; i < swappedSprites.length; i++) {
-            this.tweens.add({
-                targets: swappedSprites[i].block.blockSprite,
-                y: swappedSprites[i].block.getSpriteY(),
-                duration: gameOptions.fallSpeed * swappedSprites[i].deltaRow,
-                callbackScope: this
-            });
+            this.spriteEffectFactory.createFallSpriteEffect(swappedSprites[i]);
         }
         for (let i = 0; i < createdSprites.length; i++) {
             let deltaDistance = (-1) * createdSprites[i].getSpriteFallY() - createdSprites[i].getSpriteY();
             deltaDistance = Math.abs(Math.ceil(deltaDistance / gameOptions.blockSize));
-            this.tweens.add({
-                targets: createdSprites[i].blockSprite,
-                y: createdSprites[i].getSpriteY(),
-                duration: gameOptions.fallSpeed * 6,
-                callbackScope: this,
-                onComplete: function () {
-                    this.canPick = true;
-                }
-            });
+            this.spriteEffectFactory.createFallSpriteEffectCallback(createdSprites[i], callback);
         }
     }
 
     shakeSprite(sprite) {
         this.cube_collect_sound.play();
-        this.tweens.add({
-            targets: sprite,
-            rotation: 0.5,
-            duration: gameOptions.shakeSpeed,
-            callbackScope: this,
-            onComplete: function () {
-                this.tweens.add({
-                    targets: sprite,
-                    rotation: -0.5,
-                    duration: gameOptions.shakeSpeed,
-                    callbackScope: this,
-                    onComplete: function () {
-                        this.tweens.add({
-                            targets: sprite,
-                            rotation: 0,
-                            duration: gameOptions.shakeSpeed,
-                            callbackScope: this
-                        });
-                    }
-                });
-            }
-        });
+        this.spriteEffectFactory.createShakeSpriteEffect(sprite)
     }
 
     adjustMoves(moves) {
@@ -208,43 +181,12 @@ class BlastScene extends Phaser.Scene {
 
 
     particleEffect(block) {
-        function getRandomArbitrary(min, max) {
-            return Math.random() * (max - min) + min;
-        }
-        let plusOrMinus = Math.random() < 0.5 ? -1 : 1;
         this.particleEffects.push(
-            this.physics.add.sprite(
-                block.getSpriteX(),
-                block.getSpriteY(),
-                "solidColorParticle1"
-            )
-            .setScale(0.7)
-            .setVelocityX(getRandomArbitrary(100, 400) * plusOrMinus)
+            this.particleEffectFactory.createParticleEffect(block, "solidColorParticle1")
         );
-        for (let i = 0; i < 3; i++) {
-            this.createParticleEffect(block, "solidColorParticle1");
-            this.createParticleEffect(block, "solidColorParticle2");
-        }
-    }
-
-    createParticleEffect(block, particleName) {
-        function getRandomArbitrary(min, max) {
-            return Math.random() * (max - min) + min;
-        }
-        let plusOrMinus = Math.random() < 0.5 ? -1 : 1;
         this.particleEffects.push(
-            this.physics.add.sprite(
-                block.getSpriteX() + plusOrMinus * getRandomArbitrary(5, 20),
-                block.getSpriteY() + plusOrMinus * getRandomArbitrary(5, 20),
-                particleName
-            )
-                .setScale(getRandomArbitrary(0.1, 0.3))
-                .setVelocityX(getRandomArbitrary(100, 400) * plusOrMinus)
+            this.particleEffectFactory.createParticleEffect(block, "solidColorParticle2")
         );
-
-
     }
-
-
 
 }
