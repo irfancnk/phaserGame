@@ -11,7 +11,7 @@ class ParticleEffectFactory {
             block.getSpriteY() + this.getPlusOrMinus() * this.getRandomArbitrary(5, 20),
             particleName
         )
-        .setScale(this.getRandomArbitrary(0.2, 0.6))
+        .setScale(this.getRandomArbitrary(0.2, 0.45))
         .setVelocityX(this.getRandomArbitrary(100, 300) * this.getPlusOrMinus())
         .setVelocityY(this.getRandomArbitrary(500, 700) * -1)
         let rotateInterval = setInterval(function () {
